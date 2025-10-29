@@ -1,13 +1,8 @@
-from django.shortcuts import HttpResponse
-
-# Create your views here.
+from django.shortcuts import render
+from .models import Product
 
 def root(request):
-    first_compoud = request.GET['a']
-    second_compoud = request.GET['b']
-    result = first_compoud + second_compoud
-
-    return HttpResponse(str(result))
+    return render(request, 'main_catalog.html')
 
 
 

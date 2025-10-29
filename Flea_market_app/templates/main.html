@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LostMArket - Потерянный рынок</title>
+    <style>
+        /* Общие стили */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #eaeded;
+            color: #0F1111;
+        }
+        
+        a {
+            text-decoration: none;
+            color: #007185;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+            color: #C7511F;
+        }
+        
+        .container {
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        /* Шапка сайта */
+        header {
+            background-color: #131921;
+            color: white;
+            padding: 10px 0;
+        }
+        
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 10px;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo span {
+            color: #FF9900;
+        }
+        
+        .search-bar {
+            display: flex;
+            flex-grow: 1;
+            max-width: 700px;
+            margin: 0 20px;
+        }
+        
+        .search-bar select {
+            background-color: #f3f3f3;
+            border: none;
+            border-radius: 4px 0 0 4px;
+            padding: 0 10px;
+            border-right: 1px solid #ddd;
+        }
+        
+        .search-bar input {
+            flex-grow: 1;
+            border: none;
+            padding: 10px;
+            font-size: 16px;
+        }
+        
+        .search-bar button {
+            background-color: #febd69;
+            border: none;
+            border-radius: 0 4px 4px 0;
+            padding: 0 15px;
+            cursor: pointer;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+        }
+        
+        .header-action {
+            margin-left: 20px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        
+        .cart {
+            display: flex;
+            align-items: center;
+        }
+        
+        .cart-icon {
+            font-size: 24px;
+            margin-right: 5px;
+        }
+        
+        .header-bottom {
+            display: flex;
+            padding-top: 10px;
+        }
+        
+        .nav-menu {
+            display: flex;
+            list-style: none;
+        }
+        
+        .nav-menu li {
+            margin-right: 15px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        
+        /* Основной контент */
+        .main-content {
+            display: flex;
+            margin-top: 20px;
+        }
+        
+        /* Боковая панель */
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin-right: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar h3 {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .sidebar ul {
+            list-style: none;
+        }
+        
+        .sidebar li {
+            padding: 8px 0;
+            cursor: pointer;
+        }
+        
+        /* Товары */
+        .products {
+            flex-grow: 1;
+        }
+        
+        .banner {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .banner h2 {
+            margin-bottom: 10px;
+        }
+        
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .product-card {
+            background-color: white;
+            padding: 15px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .product-image {
+            height: 200px;
+            background-color: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        
+        .product-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            height: 40px;
+            overflow: hidden;
+        }
+        
+        .product-rating {
+            color: #FFA41C;
+            margin-bottom: 10px;
+        }
+        
+        .product-price {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .prime-badge {
+            color: #007185;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .add-to-cart {
+            background-color: #FFD814;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+        }
+        
+        .add-to-cart:hover {
+            background-color: #F7CA00;
+        }
+        
+        /* Подвал сайта */
+        footer {
+            background-color: #232F3E;
+            color: white;
+            padding: 40px 0 20px;
+            margin-top: 40px;
+        }
+        
+        .footer-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .footer-column h3 {
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .footer-column ul {
+            list-style: none;
+        }
+        
+        .footer-column li {
+            margin-bottom: 10px;
+        }
+        
+        .footer-column a {
+            color: #DDD;
+        }
+        
+        .footer-bottom {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #3a4553;
+        }
+        
+        /* Адаптивность */
+        @media (max-width: 992px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 20px;
+            }
+            
+            .header-top {
+                flex-wrap: wrap;
+            }
+            
+            .search-bar {
+                order: 3;
+                margin: 10px 0 0;
+                max-width: 100%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header-actions {
+                flex-wrap: wrap;
+            }
+            
+            .header-action {
+                margin: 5px;
+            }
+            
+            .nav-menu {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Шапка сайта -->
+    <header>
+        <div class="container">
+            <div class="header-top">
+                <a href="#" class="logo">Lost<span>Market</span></a>
+                
+                <div class="search-bar">
+                    <select>
+                        <option>Все категории</option>
+                        <option>Электроника</option>
+                        <option>Книги</option>
+                        <option>Одежда</option>
+                        <option>Дом и сад</option>
+                    </select>
+                    <input type="text" placeholder="Поиск товаров...">
+                    <button>🔍</button>
+                </div>
+                
+                <div class="header-actions">
+                    <div class="header-action">
+                        <div>Привет, войдите</div>
+                        <div><b>Аккаунт и списки</b></div>
+                    </div>
+                    <div class="header-action">
+                        <div>Возвраты</div>
+                        <div><b>и Заказы</b></div>
+                    </div>
+                    <div class="header-action cart">
+                        <div class="cart-icon">🛒</div>
+                        <div><b>Корзина</b></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="header-bottom">
+                <ul class="nav-menu">
+                    <li>☰ Все</li>
+                    <li>Сделки дня</li>
+                    <li>Новые поступления</li>
+                    <li>Лучшие продажи</li>
+                    <li>Подарочные карты</li>
+                    <li>Помощь</li>
+                </ul>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Основной контент -->
+    <div class="container">
+        <div class="main-content">
+            <!-- Боковая панель -->
+            <aside class="sidebar">
+                <h3>Категории</h3>
+                <ul>
+                    <li>Электроника</li>
+                    <li>Компьютеры</li>
+                    <li>Смартфоны и гаджеты</li>
+                </ul>
+            </aside>
+            
+            <!-- Товары -->
+            <main class="products">
+                <div class="banner">
+                    <h2>Рекомендуемые товары</h2>
+                    <p>Лучшие предложения для вас</p>
+                </div>
+                
+                <div class="product-grid">
+                    <!-- Товар 1 -->
+                    <div class="product-card">
+                        <div class="product-image">
+                            [Изображение товара]
+                        </div>
+                        <div class="product-title">Ипхоне 27 про ульра макс эволютшен</div>
+                        <div class="product-rating">★★★★★ (1254)</div>
+                        <div class="product-price">1 189 990 ₽</div>
+                        <div class="prime-badge">✓ Платная доставка завтра</div>
+                        <button class="add-to-cart">Добавить в корзину</button>
+                    </div>
