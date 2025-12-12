@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Главная - Flea Market{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3"><i class="fas fa-filter me-2"></i>Фильтры поиска</h5>
+        <form method="GET" action="{% url 'home' %}" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Категория</label>
+                <select name="category" class="form-select">
+                    <option value="">Все категории</option>
+                    {% for category in all_categories %}
+                    <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:'i' %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-3">
+                <label class="form-label">Город</label>
+                <input type="text" name="city" class="form-control" placeholder="Город" value="{{ request.GET.city }}">
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label">Цена от</label>
+                <input type="number" name="price_min" class="form-control" placeholder="0" value="{{ request.GET.price_min }}">
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label">Цена до</label>
+                <input type="number" name="price_max" class="form-control" placeholder="1000000" value="{{ request.GET.price_max }}">
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search me-1"></i>Найти
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-box">
+            <span class="stat-number">{{ total_products }}</span>
+            <span class="stat-label">Всего товаров</span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-box">
+            <span class="stat-number">{{ total_categories }}</span>
+            <span class="stat-label">Категорий</span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-box">
+            <span class="stat-number">{{ active_products }}</span>
+            <span class="stat-label">Активных</span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-box">
+            <span class="stat-number">{{ all_categories.count }}</span>
+            <span class="stat-label">Всего категорий</span>
+        </div>
+    </div>
+</div>
+
+<h3 class="section-title">Свежие объявления</h3>
+<div class="row">
+    {% for product in products %}
+    <div class="col-lg-3 col-md-4 col-sm-6">
+        <div class="product-card">
+            <div class="position-relative">
+                {% if product.images.first %}
+                <img src="{{ product.images.first.image.url }}" class="product-img" alt="{{ product.title }}">
+                {% else %}
+                <img src="{% static 'style/images/no-image.jpg' %}" class="product-img" alt="Нет фото">
+                {% endif %}
+                
+                <div class="position-absolute top-0 end-0 m-2">
+                    <span class="product-status status-{{ product.status }}">
+                        {{ product.get_status_display }}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="p-3">
+                <h5 class="product-title">{{ product.title }}</h5>
+                
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="product-price">{{ product.price }} ₽</span>
+                    <span class="product-city">
+                        <i class="fas fa-map-marker-alt me-1"></i>{{ product.city }}
+                    </span>
+                </div>
+                
+                <p class="text-muted small mb-3" style="font-size: 0.85rem;">
+                    {{ product.description|truncatechars:60 }}
+                </p>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        <i class="far fa-clock me-1"></i>{{ product.created_at|date:"d.m.Y" }}
+                    </small>
+                    <a href="{% url 'product_detail' product.id %}" class="btn btn-sm btn-primary">
+                        Подробнее
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>Товары не найдены
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if products.has_other_pages %}
+<nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if products.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ products.previous_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                Назад
+            </a>
+        </li>
+        {% endif %}
+        
+        {% for i in products.paginator.page_range %}
+        {% if products.number == i %}
+        <li class="page-item active">
+            <span class="page-link">{{ i }}</span>
+        </li>
+        {% else %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ i }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                {{ i }}
+            </a>
+        </li>
+        {% endif %}
+        {% endfor %}
+        
+        {% if products.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ products.next_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                Вперед
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

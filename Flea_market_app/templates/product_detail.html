@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.title }} - Flea Market{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card detail-card mb-4">
+            <div class="card-body">
+                {% if product.images.exists %}
+                <div class="text-center mb-4">
+                    <img id="main-image" src="{{ product.images.first.image.url }}" 
+                         class="img-fluid product-img-detail" alt="{{ product.title }}">
+                </div>
+                
+                <div class="product-gallery">
+                    {% for image in product.images.all %}
+                    <img src="{{ image.image.url }}" 
+                         class="thumbnail {% if forloop.first %}active{% endif %}" 
+                         alt="{{ product.title }}" 
+                         onclick="changeImage('{{ image.image.url }}', this)">
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center">
+                    <img src="{% static 'style/images/no-image.jpg' %}" 
+                         class="img-fluid product-img-detail" alt="Нет фото">
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card detail-card mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h1 class="h3 mb-1">{{ product.title }}</h1>
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <span class="product-status status-{{ product.status }}">
+                                {{ product.get_status_display }}
+                            </span>
+                            {% if product.condition == 'new' %}
+                            <span class="badge bg-success">Новый</span>
+                            {% elif product.condition == 'used' %}
+                            <span class="badge bg-warning">Б/у</span>
+                            {% else %}
+                            <span class="badge bg-danger">Требует ремонта</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <h2 class="h2 text-primary">{{ product.price }} ₽</h2>
+                </div>
+                
+                <div class="mb-4">
+                    <h5 class="mb-2">Описание</h5>
+                    <p class="text-muted">{{ product.description|linebreaks }}</p>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <h6><i class="fas fa-map-marker-alt text-primary me-2"></i>Местоположение</h6>
+                            <p class="mb-0">{{ product.city }}</p>
+                            {% if product.address %}
+                            <small class="text-muted">{{ product.address }}</small>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6><i class="fas fa-tag text-primary me-2"></i>Категория</h6>
+                            <p class="mb-0">{{ product.category.name }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <h6><i class="far fa-clock text-primary me-2"></i>Дата публикации</h6>
+                            <p class="mb-0">{{ product.created_at|date:"d.m.Y H:i" }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6><i class="fas fa-eye text-primary me-2"></i>Просмотры</h6>
+                            <p class="mb-0">{{ product.views }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <a href="#" class="btn btn-primary btn-lg w-100">
+                        <i class="fas fa-comment me-2"></i>Связаться с продавцом
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card detail-card mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Продавец</h5>
+                <div class="d-flex align-items-center mb-3">
+                    {% if product.seller.avatar %}
+                    <img src="{{ product.seller.avatar.url }}" class="avatar-lg me-3" alt="Аватар">
+                    {% else %}
+                    <div class="avatar-lg bg-primary text-white d-flex align-items-center justify-content-center me-3" style="font-size: 2rem;">
+                        {{ product.seller.user.username|first|upper }}
+                    </div>
+                    {% endif %}
+                    <div>
+                        <h5 class="mb-1">{{ product.seller.user.username }}</h5>
+                        <p class="text-muted mb-1">
+                            <i class="fas fa-map-marker-alt me-1"></i>{{ product.seller.city|default:"Город не указан" }}
+                        </p>
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-phone me-1"></i>{{ product.seller.phone|default:"Телефон не указан" }}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        <div class="stat-box py-3">
+                            <span class="stat-number">{{ seller_products_count }}</span>
+                            <span class="stat-label">Товаров</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="stat-box py-3">
+                            <span class="stat-number">{{ seller_rating }}</span>
+                            <span class="stat-label">Рейтинг</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="stat-box py-3">
+                            <span class="stat-number">{{ seller_reviews }}</span>
+                            <span class="stat-label">Отзывов</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card detail-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">Отзывы о продавце</h5>
+                    <span class="badge bg-primary">{{ reviews.count }}</span>
+                </div>
+                
+                {% if reviews %}
+                <div style="max-height: 300px; overflow-y: auto;">
+                    {% for review in reviews|slice:":5" %}
+                    <div class="review-card">
+                        <div class="d-flex justify-content-between mb-2">
+                            <strong>{{ review.author.user.username }}</strong>
+                            <div class="rating-stars">
+                                {% for i in "12345" %}
+                                {% if forloop.counter <= review.rating %}
+                                <i class="fas fa-star"></i>
+                                {% else %}
+                                <i class="far fa-star"></i>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <p class="mb-2">{{ review.text }}</p>
+                        <small class="text-muted">{{ review.created_at|date:"d.m.Y" }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-comment-slash fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Отзывов пока нет</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function changeImage(src, element) {
+    document.getElementById('main-image').src = src;
+    document.querySelectorAll('.thumbnail').forEach(img => img.classList.remove('active'));
+    element.classList.add('active');
+}
+</script>
+{% endblock %}

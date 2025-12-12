@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h1 class="mb-4">
+    {% if query %}
+    Результаты поиска: "{{ query }}"
+    {% else %}
+    Все товары
+    {% endif %}
+</h1>
+
+<p class="text-muted mb-4">Найдено товаров: {{ products.count }}</p>
+
+<div class="row">
+    {% for product in products %}
+    <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+        <div class="card product-card h-100">
+            {% if product.images.first %}
+            <img src="{{ product.images.first.image.url }}" class="card-img-top product-img" alt="{{ product.title }}">
+            {% else %}
+            <img src="{% static 'style/images/no-image.jpg' %}" class="card-img-top product-img" alt="Нет фото">
+            {% endif %}
+            
+            <div class="card-body">
+                <h5 class="product-title">{{ product.title }}</h5>
+                <p class="text-muted small">{{ product.description|truncatechars:60 }}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="product-price">{{ product.price }} ₽</span>
+                    <span class="product-city">{{ product.city }}</span>
+                </div>
+            </div>
+            <div class="card-footer bg-white border-top-0">
+                <a href="{% url 'product_detail' product.id %}" class="btn btn-primary btn-sm w-100">
+                    Подробнее
+                </a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>Товары не найдены
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

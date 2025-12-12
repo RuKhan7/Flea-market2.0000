@@ -8,6 +8,5 @@ urlpatterns = [
     path('', include('Flea_market_app.urls'))
 ]
 
-# Добавьте для работы с медиафайлами в режиме разработки
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
