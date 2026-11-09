@@ -1,159 +1,83 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
-from django.db.models import Q, Count, Avg
+# api/views.py
+from rest_framework import viewsets, permissions, status
+from rest_framework.response import Response
+from rest_framework.decorators import action
+from rest_framework.views import APIView
+from django.shortcuts import get_object_or_404
 from .models import *
-from django.core.paginator import Paginator
+from .serializers import *
 
-def get_all_categories():
-    return Category.objects.all()
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-def home(request):
-    category_id = request.GET.get('category')
-    city = request.GET.get('city')
-    price_min = request.GET.get('price_min')
-    price_max = request.GET.get('price_max')
-    search_query = request.GET.get('q', '')
-    
-    products = Product.objects.filter(status='active')
-    
-    if category_id:
-        products = products.filter(category_id=category_id)
-    
-    if city:
-        products = products.filter(city__icontains=city)
-    
-    if price_min:
-        products = products.filter(price__gte=price_min)
-    
-    if price_max:
-        products = products.filter(price__lte=price_max)
-    
-    if search_query:
-        products = products.filter(
-            Q(title__icontains=search_query) | 
-            Q(description__icontains=search_query)
-        )
-    
-    total_products = Product.objects.count()
-    active_products = Product.objects.filter(status='active').count()
-    total_categories = Category.objects.count()
-    
-    popular_categories = Category.objects.annotate(
-        product_count=Count('product')
-    ).order_by('-product_count')[:6]
-    
-    paginator = Paginator(products.order_by('-created_at'), 12)
-    page = request.GET.get('page', 1)
-    products_page = paginator.get_page(page)
-    
-    context = {
-        'products': products_page,
-        'popular_categories': popular_categories,
-        'total_products': total_products,
-        'active_products': active_products,
-        'total_categories': total_categories,
-        'all_categories': get_all_categories(),
-    }
-    
-    return render(request, 'home.html', context)
+class ProductViewSet(viewsets.ModelViewSet):
+    queryset = Product.objects.filter(status='active').select_related('seller__user', 'category')
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-def product_detail(request, product_id):
-    product = get_object_or_404(
-        Product.objects.select_related('seller__user', 'category'),
-        id=product_id
-    )
-    
-    product.views += 1
-    product.save(update_fields=['views'])
-    
-    reviews = Review.objects.filter(product__seller=product.seller)
-    seller_reviews = reviews.count()
-    
-    seller_rating = reviews.aggregate(avg_rating=Avg('rating'))['avg_rating'] or 0
-    
-    context = {
-        'product': product,
-        'reviews': reviews,
-        'seller_products_count': Product.objects.filter(seller=product.seller).count(),
-        'seller_reviews': seller_reviews,
-        'seller_rating': round(seller_rating, 1),
-        'all_categories': get_all_categories(),
-    }
-    
-    return render(request, 'product_detail.html', context)
+    def get_serializer_class(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return ProductCreateUpdateSerializer
+        return ProductSerializer
 
-def category_products(request, category_id):
-    category = get_object_or_404(Category, id=category_id)
-    products = Product.objects.filter(category=category, status='active')
-    
-    context = {
-        'category': category,
-        'products': products,
-        'all_categories': get_all_categories(),
-    }
-    
-    return render(request, 'category_products.html', context)
+    def perform_create(self, serializer):
+        # Привязываем товар к профилю текущего пользователя
+        profile = get_object_or_404(Profile, user=self.request.user)
+        serializer.save(seller=profile)
 
-def search(request):
-    query = request.GET.get('q', '')
-    
-    if query:
-        products = Product.objects.filter(
-            Q(title__icontains=query) |
-            Q(description__icontains=query) |
-            Q(city__icontains=query),
-            status='active'
-        )
-    else:
-        products = Product.objects.filter(status='active')
-    
-    context = {
-        'products': products.order_by('-created_at'),
-        'query': query,
-        'all_categories': get_all_categories(),
-    }
-    
-    return render(request, 'search.html', context)
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def add_review(self, request, pk=None):
+        product = self.get_object()
+        profile = get_object_or_404(Profile, user=request.user)
+        serializer = ReviewSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(product=product, author=profile)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-def product_create(request):
-    if request.method == 'POST':
-        title = request.POST.get('title')
-        description = request.POST.get('description')
-        price = request.POST.get('price')
-        category_id = request.POST.get('category')
-        city = request.POST.get('city')
-        
-        if title and price and category_id:
-            category = Category.objects.get(id=category_id)
-            
-            first_profile = Profile.objects.first()
-            if not first_profile:
-                from django.contrib.auth.models import User
-                user = User.objects.create_user(
-                    username='demo_user',
-                    password='demo_password',
-                    email='demo@example.com'
-                )
-                first_profile = Profile.objects.create(user=user)
-            
-            product = Product.objects.create(
-                title=title,
-                description=description,
-                price=price,
-                seller=first_profile,
-                category=category,
-                city=city,
-                status='active'
-            )
-            
-            for image in request.FILES.getlist('images'):
-                ProductImage.objects.create(product=product, image=image)
-            
-            messages.success(request, 'Товар успешно добавлен!')
-            return redirect('product_detail', product_id=product.id)
-    
-    categories = Category.objects.all()
-    return render(request, 'product_create.html', {
-        'categories': categories,
-        'all_categories': get_all_categories(),
-    })
+class ReviewViewSet(viewsets.ModelViewSet):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def perform_create(self, serializer):
+        profile = get_object_or_404(Profile, user=self.request.user)
+        serializer.save(author=profile)
+
+class FavoriteViewSet(viewsets.ModelViewSet):
+    serializer_class = FavoriteSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Favorite.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class MessageViewSet(viewsets.ModelViewSet):
+    serializer_class = MessageSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Message.objects.filter(receiver__user=self.request.user)
+
+    def perform_create(self, serializer):
+        profile = get_object_or_404(Profile, user=self.request.user)
+        serializer.save(sender=profile)
+
+# Кастомное представление для регистрации
+class RegisterView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        email = request.data.get('email', '')
+        if not username or not password:
+            return Response({'error': 'Username и password обязательны'}, status=400)
+        if User.objects.filter(username=username).exists():
+            return Response({'error': 'Пользователь уже существует'}, status=400)
+        user = User.objects.create_user(username=username, password=password, email=email)
+        Profile.objects.create(user=user)
+        return Response({'message': 'Пользователь создан'}, status=201)

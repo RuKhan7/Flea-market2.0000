@@ -1,10 +1,19 @@
-from django.urls import path
-from . import views
+# api/urls.py
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import *
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+router = DefaultRouter()
+router.register(r'categories', CategoryViewSet)
+router.register(r'products', ProductViewSet)
+router.register(r'reviews', ReviewViewSet)
+router.register(r'favorites', FavoriteViewSet)
+router.register(r'messages', MessageViewSet)
 
 urlpatterns = [
-    path('', views.home, name='home'),
-    path('search/', views.search, name='search'),
-    path('product/<int:product_id>/', views.product_detail, name='product_detail'),
-    path('category/<int:category_id>/', views.category_products, name='category_products'),
-    path('product/create/', views.product_create, name='product_create'),
+    path('', include(router.urls)),
+    path('register/', RegisterView.as_view(), name='register'),
+    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
